@@ -102,17 +102,13 @@ export default function HomePage() {
       <div className="px-8 space-y-6 max-w-lg mx-auto">
         {/* Today's Devotional - Hero Card */}
         <section className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 rounded-3xl p-8 text-white shadow-lg shadow-amber-200/50">
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-
           <div className="relative">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
                 <span className="text-2xl">📖</span>
               </div>
               {data?.completedToday && (
-                <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
                   Completed
                 </span>
               )}
@@ -132,9 +128,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-3 px-6 py-3 bg-white text-amber-600 font-semibold rounded-xl hover:bg-amber-50 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               {data?.completedToday ? 'Read Again' : 'Begin Reading'}
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span>→</span>
             </Link>
           </div>
         </section>
@@ -189,7 +183,7 @@ export default function HomePage() {
         {/* Ask Pastor Preview */}
         <section className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl p-6 text-white">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0">
               <span className="text-2xl">🎙️</span>
             </div>
             <div className="flex-1">
@@ -207,9 +201,7 @@ export default function HomePage() {
                 className="inline-flex items-center gap-2 text-amber-400 font-medium text-sm hover:text-amber-300 transition-colors"
               >
                 Learn More
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <span>→</span>
               </Link>
             </div>
           </div>

@@ -91,7 +91,7 @@ export default function ImpactPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin" />
       </main>
     )
@@ -100,16 +100,14 @@ export default function ImpactPage() {
   const mealsProvided = (data?.totalExtensions || 0) * 10
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50 pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 pb-24">
       {/* Header */}
       <header className="px-6 py-4 flex items-center gap-4">
         <Link
           href="/devotional"
-          className="p-2 -ml-2 text-stone-500 hover:text-stone-700"
+          className="p-2 -ml-2 text-stone-500 hover:text-stone-700 text-xl"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          ←
         </Link>
         <h1 className="text-xl font-bold text-stone-900">Your Impact</h1>
       </header>

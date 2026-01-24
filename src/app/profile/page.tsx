@@ -212,23 +212,17 @@ export default function ProfilePage() {
           <div className="space-y-2">
             <button className="w-full flex items-center justify-between py-3 text-left hover:bg-stone-50 -mx-2 px-2 rounded-xl transition-colors">
               <span className="font-medium text-stone-900">Help & FAQ</span>
-              <svg className="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="text-stone-400">→</span>
             </button>
 
             <button className="w-full flex items-center justify-between py-3 text-left hover:bg-stone-50 -mx-2 px-2 rounded-xl transition-colors">
               <span className="font-medium text-stone-900">Privacy Policy</span>
-              <svg className="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="text-stone-400">→</span>
             </button>
 
             <button className="w-full flex items-center justify-between py-3 text-left hover:bg-stone-50 -mx-2 px-2 rounded-xl transition-colors">
               <span className="font-medium text-stone-900">Terms of Service</span>
-              <svg className="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="text-stone-400">→</span>
             </button>
           </div>
         </section>

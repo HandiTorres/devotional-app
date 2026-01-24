@@ -228,9 +228,7 @@ function DevotionalContent() {
       <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 flex items-center justify-center px-8">
         <div className="text-center space-y-6 max-w-sm">
           <div className="w-20 h-20 bg-red-100 rounded-full mx-auto flex items-center justify-center">
-            <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <span className="text-4xl">⚠️</span>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-stone-900">Something went wrong</h1>
@@ -266,9 +264,7 @@ function DevotionalContent() {
         <div className="fixed top-6 left-6 right-6 z-50 flex justify-center animate-fade-in">
           <div className="bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <span className="text-xl">✓</span>
             </div>
             <div>
               <p className="font-semibold">Streak Extended!</p>
@@ -344,9 +340,7 @@ function DevotionalContent() {
           {completed ? (
             <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm text-center">
               <div className="w-14 h-14 bg-emerald-100 rounded-full mx-auto flex items-center justify-center mb-3">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <span className="text-2xl">✓</span>
               </div>
               <p className="text-lg font-semibold text-stone-900">Completed for today</p>
               <p className="text-stone-500 text-sm mt-1">Come back tomorrow for your next devotional</p>
@@ -365,9 +359,7 @@ function DevotionalContent() {
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <span>I&apos;ve completed today&apos;s reading</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <span>✓</span>
                 </span>
               )}
             </button>
