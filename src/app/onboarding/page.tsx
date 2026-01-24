@@ -143,48 +143,74 @@ export default function OnboardingPage() {
 
   const completeOnboarding = async () => {
     setLoading(true)
+    console.log('Starting onboarding completion...')
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/')
-      return
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) {
+        console.error('Auth error:', authError)
+        setLoading(false)
+        return
+      }
+      if (!user) {
+        console.log('No user found, redirecting to home')
+        router.push('/')
+        return
+      }
+
+      console.log('User found:', user.id)
+
+      const payload = {
+        id: user.id,
+        email: user.email,
+        gender: data.gender,
+        age_range: data.ageRange,
+        faith_background: data.faithBackground,
+        faith_background_other: data.faithBackground === 'other' ? data.faithBackgroundOther : null,
+        life_stage: data.lifeStage,
+        life_stage_other: data.lifeStage === 'other' ? data.lifeStageOther : null,
+        current_challenge: data.challenge,
+        challenge_other: data.challenge === 'other' ? data.challengeOther : null,
+        family_situation: data.familySituation,
+        family_other: data.familySituation === 'other' ? data.familyOther : null,
+        primary_goal: data.primaryGoal,
+        primary_goal_other: data.primaryGoal === 'other' ? data.primaryGoalOther : null,
+        personal_context: data.personalContext || null,
+        preferred_charity: data.preferredCharity,
+        onboarding_complete: true,
+      }
+
+      console.log('Saving user profile...')
+      const { error: upsertError } = await supabase
+        .from('users')
+        .upsert(payload as never, { onConflict: 'id' })
+
+      if (upsertError) {
+        console.error('Failed to save profile:', upsertError)
+        setLoading(false)
+        return
+      }
+
+      console.log('Profile saved successfully')
+
+      // Ensure streak row exists
+      console.log('Creating streak row...')
+      const { error: streakError } = await supabase
+        .from('streaks')
+        .upsert({ user_id: user.id } as never, { onConflict: 'user_id' })
+
+      if (streakError) {
+        console.error('Failed to create streak:', streakError)
+        // Continue anyway - streak will be created when they complete first devotional
+      }
+
+      console.log('Onboarding complete, redirecting to home...')
+      // Redirect to home (not devotional) to avoid triggering slow AI generation
+      router.push('/home')
+    } catch (err) {
+      console.error('Unexpected error during onboarding:', err)
+      setLoading(false)
     }
-
-    const payload = {
-      id: user.id,
-      email: user.email,
-      gender: data.gender,
-      age_range: data.ageRange,
-      faith_background: data.faithBackground,
-      faith_background_other: data.faithBackground === 'other' ? data.faithBackgroundOther : null,
-      life_stage: data.lifeStage,
-      life_stage_other: data.lifeStage === 'other' ? data.lifeStageOther : null,
-      current_challenge: data.challenge,
-      challenge_other: data.challenge === 'other' ? data.challengeOther : null,
-      family_situation: data.familySituation,
-      family_other: data.familySituation === 'other' ? data.familyOther : null,
-      primary_goal: data.primaryGoal,
-      primary_goal_other: data.primaryGoal === 'other' ? data.primaryGoalOther : null,
-      personal_context: data.personalContext || null,
-      preferred_charity: data.preferredCharity,
-      onboarding_complete: true,
-    }
-
-    const { error } = await supabase
-      .from('users')
-      .upsert(payload as never, { onConflict: 'id' })
-
-    if (error) {
-      console.error('Onboarding error:', error)
-    }
-
-    // Ensure streak row exists
-    await supabase
-      .from('streaks')
-      .upsert({ user_id: user.id } as never, { onConflict: 'user_id' })
-
-    router.push('/devotional')
-    router.refresh()
   }
 
   if (!mounted) {
