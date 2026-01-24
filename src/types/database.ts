@@ -1,0 +1,129 @@
+export type Database = {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          email: string | null
+          gender: 'him' | 'her' | null
+          life_stage: string | null
+          current_challenge: string | null
+          family_situation: string | null
+          onboarding_complete: boolean
+          preferred_pastor: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          gender?: 'him' | 'her' | null
+          life_stage?: string | null
+          current_challenge?: string | null
+          family_situation?: string | null
+          onboarding_complete?: boolean
+          preferred_pastor?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          gender?: 'him' | 'her' | null
+          life_stage?: string | null
+          current_challenge?: string | null
+          family_situation?: string | null
+          onboarding_complete?: boolean
+          preferred_pastor?: string
+          created_at?: string
+        }
+      }
+      streaks: {
+        Row: {
+          user_id: string
+          current_streak: number
+          longest_streak: number
+          last_completed_date: string | null
+          total_extensions: number
+        }
+        Insert: {
+          user_id: string
+          current_streak?: number
+          longest_streak?: number
+          last_completed_date?: string | null
+          total_extensions?: number
+        }
+        Update: {
+          user_id?: string
+          current_streak?: number
+          longest_streak?: number
+          last_completed_date?: string | null
+          total_extensions?: number
+        }
+      }
+      completions: {
+        Row: {
+          id: string
+          user_id: string
+          completed_date: string
+          devotional_content: DevotionalContent
+          time_spent_seconds: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          completed_date: string
+          devotional_content: DevotionalContent
+          time_spent_seconds?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          completed_date?: string
+          devotional_content?: DevotionalContent
+          time_spent_seconds?: number | null
+          created_at?: string
+        }
+      }
+      donations: {
+        Row: {
+          id: string
+          user_id: string
+          amount_cents: number
+          type: 'streak_extension' | 'voluntary'
+          stripe_payment_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount_cents: number
+          type: 'streak_extension' | 'voluntary'
+          stripe_payment_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount_cents?: number
+          type?: 'streak_extension' | 'voluntary'
+          stripe_payment_id?: string | null
+          created_at?: string
+        }
+      }
+    }
+  }
+}
+
+export type DevotionalContent = {
+  scripture: string
+  scripture_reference: string
+  reflection: string
+  action_step: string
+  prayer: string
+}
+
+export type User = Database['public']['Tables']['users']['Row']
+export type Streak = Database['public']['Tables']['streaks']['Row']
+export type Completion = Database['public']['Tables']['completions']['Row']
+export type Donation = Database['public']['Tables']['donations']['Row']
