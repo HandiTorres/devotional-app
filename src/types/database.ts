@@ -6,33 +6,66 @@ export type Database = {
           id: string
           email: string | null
           gender: 'him' | 'her' | null
+          age_range: string | null
+          faith_background: string | null
+          faith_background_other: string | null
           life_stage: string | null
+          life_stage_other: string | null
           current_challenge: string | null
+          challenge_other: string | null
           family_situation: string | null
+          family_other: string | null
+          primary_goal: string | null
+          primary_goal_other: string | null
+          personal_context: string | null
           onboarding_complete: boolean
           preferred_pastor: string
+          preferred_charity: string | null
+          milestones_shown: number[] | null
           created_at: string
         }
         Insert: {
           id: string
           email?: string | null
           gender?: 'him' | 'her' | null
+          age_range?: string | null
+          faith_background?: string | null
+          faith_background_other?: string | null
           life_stage?: string | null
+          life_stage_other?: string | null
           current_challenge?: string | null
+          challenge_other?: string | null
           family_situation?: string | null
+          family_other?: string | null
+          primary_goal?: string | null
+          primary_goal_other?: string | null
+          personal_context?: string | null
           onboarding_complete?: boolean
           preferred_pastor?: string
+          preferred_charity?: string | null
+          milestones_shown?: number[] | null
           created_at?: string
         }
         Update: {
           id?: string
           email?: string | null
           gender?: 'him' | 'her' | null
+          age_range?: string | null
+          faith_background?: string | null
+          faith_background_other?: string | null
           life_stage?: string | null
+          life_stage_other?: string | null
           current_challenge?: string | null
+          challenge_other?: string | null
           family_situation?: string | null
+          family_other?: string | null
+          primary_goal?: string | null
+          primary_goal_other?: string | null
+          personal_context?: string | null
           onboarding_complete?: boolean
           preferred_pastor?: string
+          preferred_charity?: string | null
+          milestones_shown?: number[] | null
           created_at?: string
         }
       }
