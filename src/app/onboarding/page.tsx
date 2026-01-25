@@ -95,6 +95,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const [data, setData] = useState<OnboardingData>({
     gender: null,
@@ -143,72 +144,77 @@ export default function OnboardingPage() {
 
   const completeOnboarding = async () => {
     setLoading(true)
-    console.log('Starting onboarding completion...')
+    setError(null)
+    console.log('=== ONBOARDING COMPLETION START ===')
 
     try {
+      // Step 1: Get user
+      console.log('Step 1: Getting user...')
       const { data: { user }, error: authError } = await supabase.auth.getUser()
+
       if (authError) {
         console.error('Auth error:', authError)
+        setError(`Auth error: ${authError.message}`)
         setLoading(false)
         return
       }
+
       if (!user) {
-        console.log('No user found, redirecting to home')
-        router.push('/')
+        console.log('No user found')
+        setError('No user found. Please log in again.')
+        setLoading(false)
         return
       }
 
       console.log('User found:', user.id)
 
+      // Step 2: Build payload with only essential fields first
       const payload = {
         id: user.id,
         email: user.email,
         gender: data.gender,
-        age_range: data.ageRange,
-        faith_background: data.faithBackground,
-        faith_background_other: data.faithBackground === 'other' ? data.faithBackgroundOther : null,
-        life_stage: data.lifeStage,
-        life_stage_other: data.lifeStage === 'other' ? data.lifeStageOther : null,
-        current_challenge: data.challenge,
-        challenge_other: data.challenge === 'other' ? data.challengeOther : null,
-        family_situation: data.familySituation,
-        family_other: data.familySituation === 'other' ? data.familyOther : null,
-        primary_goal: data.primaryGoal,
-        primary_goal_other: data.primaryGoal === 'other' ? data.primaryGoalOther : null,
-        personal_context: data.personalContext || null,
-        preferred_charity: data.preferredCharity,
         onboarding_complete: true,
+        // Optional fields - use null if not provided
+        age_range: data.ageRange || null,
+        faith_background: data.faithBackground || null,
+        life_stage: data.lifeStage || null,
+        current_challenge: data.challenge || null,
+        family_situation: data.familySituation || null,
+        primary_goal: data.primaryGoal || null,
+        preferred_charity: data.preferredCharity || null,
+        personal_context: data.personalContext || null,
+        // "Other" fields
+        faith_background_other: data.faithBackground === 'other' ? data.faithBackgroundOther : null,
+        life_stage_other: data.lifeStage === 'other' ? data.lifeStageOther : null,
+        challenge_other: data.challenge === 'other' ? data.challengeOther : null,
+        family_other: data.familySituation === 'other' ? data.familyOther : null,
+        primary_goal_other: data.primaryGoal === 'other' ? data.primaryGoalOther : null,
       }
 
-      console.log('Saving user profile...')
+      console.log('Step 2: Payload built:', JSON.stringify(payload, null, 2))
+
+      // Step 3: Save to database
+      console.log('Step 3: Saving to database...')
       const { error: upsertError } = await supabase
         .from('users')
         .upsert(payload as never, { onConflict: 'id' })
 
       if (upsertError) {
-        console.error('Failed to save profile:', upsertError)
+        console.error('Database error:', upsertError)
+        setError(`Database error: ${upsertError.message}`)
         setLoading(false)
         return
       }
 
-      console.log('Profile saved successfully')
+      console.log('Step 3: Profile saved successfully!')
 
-      // Ensure streak row exists
-      console.log('Creating streak row...')
-      const { error: streakError } = await supabase
-        .from('streaks')
-        .upsert({ user_id: user.id } as never, { onConflict: 'user_id' })
-
-      if (streakError) {
-        console.error('Failed to create streak:', streakError)
-        // Continue anyway - streak will be created when they complete first devotional
-      }
-
-      console.log('Onboarding complete, redirecting to home...')
-      // Redirect to home (not devotional) to avoid triggering slow AI generation
+      // Step 4: Redirect to home
+      console.log('Step 4: Redirecting to /home...')
       router.push('/home')
+
     } catch (err) {
-      console.error('Unexpected error during onboarding:', err)
+      console.error('Unexpected error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setLoading(false)
     }
   }
@@ -221,15 +227,38 @@ export default function OnboardingPage() {
     )
   }
 
-  if (loading) {
+  if (loading || error) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 flex items-center justify-center px-8">
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <div>
-            <h2 className="text-2xl font-semibold text-stone-800 mb-2">Creating your experience</h2>
-            <p className="text-stone-500">Personalizing your daily devotionals...</p>
-          </div>
+        <div className="text-center space-y-6 max-w-md">
+          {error ? (
+            <>
+              <div className="w-16 h-16 bg-red-100 rounded-full mx-auto flex items-center justify-center">
+                <span className="text-3xl">!</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold text-stone-800 mb-2">Something went wrong</h2>
+                <p className="text-red-600 text-sm mb-4">{error}</p>
+                <button
+                  onClick={() => {
+                    setError(null)
+                    setLoading(false)
+                  }}
+                  className="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div>
+                <h2 className="text-2xl font-semibold text-stone-800 mb-2">Creating your experience</h2>
+                <p className="text-stone-500">Personalizing your daily devotionals...</p>
+              </div>
+            </>
+          )}
         </div>
       </main>
     )
