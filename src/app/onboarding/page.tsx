@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import type { Database } from '@/types/database'
 
 // Step configuration
 const TOTAL_STEPS = 9
@@ -142,7 +143,11 @@ export default function OnboardingPage() {
     }
   }
 
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (overrides?: Partial<OnboardingData>) => {
+    // Merge any overrides (e.g. charity selected right before calling this)
+    // to avoid stale closure issues with React state batching
+    const current = { ...data, ...overrides }
+
     setLoading(true)
     setError(null)
     console.log('=== ONBOARDING COMPLETION START ===')
@@ -168,42 +173,50 @@ export default function OnboardingPage() {
 
       console.log('User found:', user.id)
 
-      // Step 2: Build payload with only essential fields first
-      const payload = {
-        id: user.id,
-        email: user.email,
-        gender: data.gender,
+      // Step 2: Build payload
+      const payload: Database['public']['Tables']['users']['Update'] = {
+        email: user.email ?? null,
+        gender: current.gender,
         onboarding_complete: true,
-        // Optional fields - use null if not provided
-        age_range: data.ageRange || null,
-        faith_background: data.faithBackground || null,
-        life_stage: data.lifeStage || null,
-        current_challenge: data.challenge || null,
-        family_situation: data.familySituation || null,
-        primary_goal: data.primaryGoal || null,
-        preferred_charity: data.preferredCharity || null,
-        personal_context: data.personalContext || null,
-        // "Other" fields
-        faith_background_other: data.faithBackground === 'other' ? data.faithBackgroundOther : null,
-        life_stage_other: data.lifeStage === 'other' ? data.lifeStageOther : null,
-        challenge_other: data.challenge === 'other' ? data.challengeOther : null,
-        family_other: data.familySituation === 'other' ? data.familyOther : null,
-        primary_goal_other: data.primaryGoal === 'other' ? data.primaryGoalOther : null,
+        age_range: current.ageRange || null,
+        faith_background: current.faithBackground || null,
+        life_stage: current.lifeStage || null,
+        current_challenge: current.challenge || null,
+        family_situation: current.familySituation || null,
+        primary_goal: current.primaryGoal || null,
+        preferred_charity: current.preferredCharity || null,
+        personal_context: current.personalContext || null,
+        faith_background_other: current.faithBackground === 'other' ? current.faithBackgroundOther : null,
+        life_stage_other: current.lifeStage === 'other' ? current.lifeStageOther : null,
+        challenge_other: current.challenge === 'other' ? current.challengeOther : null,
+        family_other: current.familySituation === 'other' ? current.familyOther : null,
+        primary_goal_other: current.primaryGoal === 'other' ? current.primaryGoalOther : null,
       }
 
       console.log('Step 2: Payload built:', JSON.stringify(payload, null, 2))
 
-      // Step 3: Save to database
+      // Step 3: Save to database — use update (row already exists from signup trigger)
       console.log('Step 3: Saving to database...')
-      const { error: upsertError } = await supabase
+      const { error: updateError } = await supabase
         .from('users')
-        .upsert(payload as never, { onConflict: 'id' })
+        .update(payload as never)
+        .eq('id', user.id)
 
-      if (upsertError) {
-        console.error('Database error:', upsertError)
-        setError(`Database error: ${upsertError.message}`)
-        setLoading(false)
-        return
+      if (updateError) {
+        console.error('Database update error:', updateError.message, updateError.code, updateError.details, updateError.hint)
+
+        // Fallback: if update fails (e.g. row missing), try insert
+        console.log('Step 3b: Update failed, trying insert...')
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({ id: user.id, ...payload } as never)
+
+        if (insertError) {
+          console.error('Database insert error:', insertError.message, insertError.code, insertError.details, insertError.hint)
+          setError(`Failed to save profile: ${insertError.message}`)
+          setLoading(false)
+          return
+        }
       }
 
       console.log('Step 3: Profile saved successfully!')
@@ -687,7 +700,7 @@ export default function OnboardingPage() {
                     key={option.value}
                     onClick={() => {
                       updateData('preferredCharity', option.value)
-                      setTimeout(completeOnboarding, 200)
+                      setTimeout(() => completeOnboarding({ preferredCharity: option.value }), 200)
                     }}
                     className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
                       data.preferredCharity === option.value
