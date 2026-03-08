@@ -16,6 +16,7 @@ export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState<string | null>(null)
+  const [gender, setGender] = useState<'him' | 'her'>('him')
 
   const supabase = createClient()
 
@@ -28,12 +29,21 @@ export default function HomePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Get user email for greeting
+    // Get user profile for greeting and gender
     const email = user.email
     if (email) {
       const name = email.split('@')[0]
       setUserName(name.charAt(0).toUpperCase() + name.slice(1))
     }
+
+    const { data: profileData } = await supabase
+      .from('users')
+      .select('gender')
+      .eq('id', user.id)
+      .single()
+
+    const profile = profileData as { gender: 'him' | 'her' | null } | null
+    if (profile?.gender) setGender(profile.gender)
 
     type StreakRow = {
       current_streak: number
@@ -101,11 +111,15 @@ export default function HomePage() {
 
       <div className="px-8 space-y-6 max-w-lg mx-auto">
         {/* Today's Devotional - Hero Card */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 rounded-3xl p-8 text-white shadow-lg shadow-amber-200/50">
+        <section className={`relative overflow-hidden rounded-3xl p-8 text-white shadow-lg ${
+          gender === 'him'
+            ? 'bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 shadow-stone-400/20'
+            : 'bg-gradient-to-br from-amber-500 via-rose-400 to-amber-500 shadow-rose-200/50'
+        }`}>
           <div className="relative">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                <span className="text-2xl">📖</span>
+                <span className="text-2xl">{gender === 'him' ? '⚒️' : '🌿'}</span>
               </div>
               {data?.completedToday && (
                 <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
@@ -115,17 +129,21 @@ export default function HomePage() {
             </div>
 
             <h2 className="text-2xl font-bold mb-2">
-              {data?.completedToday ? "Today's Devotional" : "Your Daily Bread Awaits"}
+              {gender === 'him' ? 'The Forge' : 'The Garden'}
             </h2>
-            <p className="text-amber-100 mb-6 leading-relaxed">
+            <p className={`mb-6 leading-relaxed ${gender === 'him' ? 'text-stone-400' : 'text-amber-100'}`}>
               {data?.completedToday
-                ? "You've nourished your soul today. Well done."
-                : 'Start your day with Scripture personalized just for you'}
+                ? (gender === 'him' ? "Iron sharpened today. Well done." : "You've nourished your soul today. Well done.")
+                : (gender === 'him' ? 'Your daily challenge awaits' : 'Start your day rooted in grace')}
             </p>
 
             <Link
               href="/devotional"
-              className="inline-flex items-center gap-3 px-6 py-3 bg-white text-amber-600 font-semibold rounded-xl hover:bg-amber-50 transition-all duration-200 shadow-sm hover:shadow-md"
+              className={`inline-flex items-center gap-3 px-6 py-3 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md ${
+                gender === 'him'
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-white text-amber-600 hover:bg-amber-50'
+              }`}
             >
               {data?.completedToday ? 'Read Again' : 'Begin Reading'}
               <span>→</span>

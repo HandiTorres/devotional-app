@@ -5,18 +5,10 @@ import { getTodaysVerse } from '@/lib/verses'
 
 type UserProfile = {
   gender: 'him' | 'her' | null
-  age_range: string | null
-  faith_background: string | null
-  faith_background_other: string | null
   life_stage: string | null
   life_stage_other: string | null
   current_challenge: string | null
   challenge_other: string | null
-  family_situation: string | null
-  family_other: string | null
-  primary_goal: string | null
-  primary_goal_other: string | null
-  personal_context: string | null
 }
 
 type StreakData = {
@@ -41,7 +33,6 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Get current user
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -81,58 +72,29 @@ export async function GET() {
       })
     }
 
-    // 3. Not cached - need to generate
-    // Get full user profile with all context fields
+    // 3. Not cached — generate with Claude
     const { data: profileData } = await supabase
       .from('users')
-      .select(`
-        gender,
-        age_range,
-        faith_background,
-        faith_background_other,
-        life_stage,
-        life_stage_other,
-        current_challenge,
-        challenge_other,
-        family_situation,
-        family_other,
-        primary_goal,
-        primary_goal_other,
-        personal_context
-      `)
+      .select('gender, life_stage, life_stage_other, current_challenge, challenge_other')
       .eq('id', user.id)
       .maybeSingle()
 
     const profile = profileData as UserProfile | null
 
     if (!profile?.gender) {
-      return NextResponse.json(
-        { error: 'Profile incomplete' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Profile incomplete' }, { status: 400 })
     }
 
-    // Get today's verse
     const { verse, reference } = getTodaysVerse()
 
-    // Build user context for devotional generation
     const userContext: UserContext = {
       gender: profile.gender,
-      ageRange: profile.age_range,
-      faithBackground: profile.faith_background,
-      faithBackgroundOther: profile.faith_background_other,
       lifeStage: profile.life_stage,
       lifeStageOther: profile.life_stage_other,
       challenge: profile.current_challenge,
       challengeOther: profile.challenge_other,
-      familySituation: profile.family_situation,
-      familyOther: profile.family_other,
-      primaryGoal: profile.primary_goal,
-      primaryGoalOther: profile.primary_goal_other,
-      personalContext: profile.personal_context,
     }
 
-    // Generate devotional with Claude
     const devotionalText = await generateDevotional(verse, reference, userContext)
 
     const devotionalContent: DevotionalContent = {
@@ -142,7 +104,7 @@ export async function GET() {
       generated_at: new Date().toISOString(),
     }
 
-    // 4. Save to cache
+    // 4. Cache the result
     await supabase
       .from('daily_devotionals')
       .insert({
@@ -158,10 +120,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error generating devotional:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate devotional' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to generate devotional' }, { status: 500 })
   }
 }
 
@@ -187,7 +146,6 @@ export async function POST() {
       .maybeSingle()
 
     if (existingCompletion) {
-      // Get current streak to return
       const { data: streakData } = await supabase
         .from('streaks')
         .select('current_streak')
@@ -197,11 +155,11 @@ export async function POST() {
       const streak = streakData as { current_streak: number } | null
       return NextResponse.json({
         message: 'Already completed today',
-        streak: streak?.current_streak || 0
+        streak: streak?.current_streak || 0,
       })
     }
 
-    // Get cached devotional (should exist from GET call)
+    // Get cached devotional content
     const { data: cachedData } = await supabase
       .from('daily_devotionals')
       .select('devotional_content')
@@ -210,18 +168,17 @@ export async function POST() {
       .maybeSingle()
 
     const cached = cachedData as CachedDevotional | null
-    const devotionalContent = cached?.devotional_content || null
 
-    // Insert completion (with or without content)
+    // Insert completion
     await supabase
       .from('completions')
       .insert({
         user_id: user.id,
         completed_date: today,
-        devotional_content: devotionalContent,
+        devotional_content: cached?.devotional_content || null,
       } as never)
 
-    // Get current streak
+    // Get and update streak
     const { data: streakData } = await supabase
       .from('streaks')
       .select('*')
@@ -234,16 +191,12 @@ export async function POST() {
     let newLongest = streak?.longest_streak || 1
 
     if (streak?.last_completed_date === yesterday) {
-      // Continuing streak
       newStreak = (streak.current_streak || 0) + 1
       newLongest = Math.max(newStreak, streak.longest_streak || 0)
     } else if (streak?.last_completed_date === today) {
-      // Already completed today (shouldn't happen but handle it)
       newStreak = streak.current_streak
     }
-    // else: streak broken, start fresh at 1
 
-    // Update streak
     await supabase
       .from('streaks')
       .update({
@@ -260,9 +213,6 @@ export async function POST() {
     })
   } catch (error) {
     console.error('Error completing devotional:', error)
-    return NextResponse.json(
-      { error: 'Failed to complete devotional' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to complete devotional' }, { status: 500 })
   }
 }

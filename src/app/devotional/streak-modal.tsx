@@ -21,7 +21,7 @@ export default function StreakModal({
   currentStreak,
   preferredCharity,
   onStartFresh,
-  onDismiss
+  onDismiss,
 }: StreakModalProps) {
   const [loading, setLoading] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -33,16 +33,9 @@ export default function StreakModal({
   const handleExtend = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-      })
+      const response = await fetch('/api/stripe/checkout', { method: 'POST' })
       const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session')
-      }
-
-      // Redirect to Stripe Checkout
+      if (!response.ok) throw new Error(data.error || 'Failed to create checkout session')
       window.location.href = data.url
     } catch (error) {
       console.error('Checkout error:', error)
@@ -53,14 +46,8 @@ export default function StreakModal({
   const handleStartFresh = async () => {
     setResetting(true)
     try {
-      const response = await fetch('/api/streak/reset', {
-        method: 'POST',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to reset streak')
-      }
-
+      const response = await fetch('/api/streak/reset', { method: 'POST' })
+      if (!response.ok) throw new Error('Failed to reset streak')
       onStartFresh()
     } catch (error) {
       console.error('Reset error:', error)
@@ -71,40 +58,25 @@ export default function StreakModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onDismiss}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onDismiss} />
 
-      {/* Modal */}
       <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-        {/* Icon */}
         <div className="w-16 h-16 bg-amber-100 rounded-full mx-auto flex items-center justify-center mb-4">
           <span className="text-3xl">🔥</span>
         </div>
 
-        {/* Streak at risk */}
         <div className="text-center mb-6">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wide mb-2">
-            Streak at risk
-          </p>
-          <p className="text-3xl font-bold text-stone-900 mb-1">
-            {currentStreak}-day streak
-          </p>
+          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wide mb-2">Streak at risk</p>
+          <p className="text-3xl font-bold text-stone-900 mb-1">{currentStreak}-day streak</p>
         </div>
 
-        {/* Message */}
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold text-stone-900 mb-2">
             You missed yesterday, but your impact doesn&apos;t have to stop
           </h2>
-          <p className="text-stone-600">
-            {charityMessage}
-          </p>
+          <p className="text-stone-600">{charityMessage}</p>
         </div>
 
-        {/* Buttons */}
         <div className="space-y-3">
           <button
             onClick={handleExtend}
@@ -130,7 +102,6 @@ export default function StreakModal({
           </button>
         </div>
 
-        {/* Trust badge */}
         <p className="text-center text-stone-400 text-xs mt-4">
           Secure payment via Stripe. 100% goes to charity.
         </p>

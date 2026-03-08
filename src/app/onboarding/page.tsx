@@ -5,25 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 
-// Step configuration
-const TOTAL_STEPS = 9
-
-const AGE_RANGES = [
-  { value: '18-24', label: '18-24' },
-  { value: '25-34', label: '25-34' },
-  { value: '35-44', label: '35-44' },
-  { value: '45-54', label: '45-54' },
-  { value: '55+', label: '55+' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-]
-
-const FAITH_BACKGROUNDS = [
-  { value: 'new', label: 'New to faith', description: 'Just beginning to explore' },
-  { value: 'few_years', label: 'A few years in', description: 'Building my foundation' },
-  { value: 'lifelong', label: 'Lifelong believer', description: 'Faith has always been part of my life' },
-  { value: 'rediscovering', label: 'Rediscovering faith', description: 'Coming back after time away' },
-  { value: 'other', label: 'Other', description: 'My journey is unique' },
-]
+const TOTAL_STEPS = 4
 
 const LIFE_STAGES = [
   { value: 'student', label: 'Student', icon: '📚' },
@@ -47,25 +29,6 @@ const CHALLENGES = [
   { value: 'other', label: 'Other', icon: '💭' },
 ]
 
-const FAMILY_SITUATIONS = [
-  { value: 'single', label: 'Single', icon: '🙋' },
-  { value: 'dating', label: 'Dating', icon: '💕' },
-  { value: 'engaged', label: 'Engaged', icon: '💍' },
-  { value: 'married_no_kids', label: 'Married, No Kids', icon: '👫' },
-  { value: 'married_with_kids', label: 'Married with Kids', icon: '👨‍👩‍👧‍👦' },
-  { value: 'single_parent', label: 'Single Parent', icon: '💪' },
-  { value: 'other', label: 'Other', icon: '🌟' },
-]
-
-const PRIMARY_GOALS = [
-  { value: 'peace', label: 'Inner peace', description: 'Calm amidst the chaos' },
-  { value: 'purpose', label: 'Sense of purpose', description: 'Clarity on my direction' },
-  { value: 'discipline', label: 'Stronger discipline', description: 'Building consistent habits' },
-  { value: 'closer_to_god', label: 'Closer to God', description: 'Deepening my relationship' },
-  { value: 'community', label: 'Community connection', description: 'Feeling less alone' },
-  { value: 'other', label: 'Other', description: 'Something else entirely' },
-]
-
 const CHARITIES = [
   { value: 'feeding', label: 'Feed hungry families', icon: '🍽️', description: '10 meals per $2.99' },
   { value: 'water', label: 'Provide clean water', icon: '💧', description: 'Clean water for communities' },
@@ -74,18 +37,10 @@ const CHARITIES = [
 
 type OnboardingData = {
   gender: 'him' | 'her' | null
-  ageRange: string | null
-  faithBackground: string | null
-  faithBackgroundOther: string
   lifeStage: string | null
   lifeStageOther: string
   challenge: string | null
   challengeOther: string
-  familySituation: string | null
-  familyOther: string
-  primaryGoal: string | null
-  primaryGoalOther: string
-  personalContext: string
   preferredCharity: string | null
 }
 
@@ -100,18 +55,10 @@ export default function OnboardingPage() {
 
   const [data, setData] = useState<OnboardingData>({
     gender: null,
-    ageRange: null,
-    faithBackground: null,
-    faithBackgroundOther: '',
     lifeStage: null,
     lifeStageOther: '',
     challenge: null,
     challengeOther: '',
-    familySituation: null,
-    familyOther: '',
-    primaryGoal: null,
-    primaryGoalOther: '',
-    personalContext: '',
     preferredCharity: null,
   })
 
@@ -144,89 +91,50 @@ export default function OnboardingPage() {
   }
 
   const completeOnboarding = async (overrides?: Partial<OnboardingData>) => {
-    // Merge any overrides (e.g. charity selected right before calling this)
-    // to avoid stale closure issues with React state batching
     const current = { ...data, ...overrides }
 
     setLoading(true)
     setError(null)
-    console.log('=== ONBOARDING COMPLETION START ===')
 
     try {
-      // Step 1: Get user
-      console.log('Step 1: Getting user...')
       const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-      if (authError) {
-        console.error('Auth error:', authError)
-        setError(`Auth error: ${authError.message}`)
-        setLoading(false)
-        return
-      }
-
-      if (!user) {
-        console.log('No user found')
+      if (authError || !user) {
         setError('No user found. Please log in again.')
         setLoading(false)
         return
       }
 
-      console.log('User found:', user.id)
-
-      // Step 2: Build payload
       const payload: Database['public']['Tables']['users']['Update'] = {
         email: user.email ?? null,
         gender: current.gender,
         onboarding_complete: true,
-        age_range: current.ageRange || null,
-        faith_background: current.faithBackground || null,
         life_stage: current.lifeStage || null,
         current_challenge: current.challenge || null,
-        family_situation: current.familySituation || null,
-        primary_goal: current.primaryGoal || null,
         preferred_charity: current.preferredCharity || null,
-        personal_context: current.personalContext || null,
-        faith_background_other: current.faithBackground === 'other' ? current.faithBackgroundOther : null,
         life_stage_other: current.lifeStage === 'other' ? current.lifeStageOther : null,
         challenge_other: current.challenge === 'other' ? current.challengeOther : null,
-        family_other: current.familySituation === 'other' ? current.familyOther : null,
-        primary_goal_other: current.primaryGoal === 'other' ? current.primaryGoalOther : null,
       }
 
-      console.log('Step 2: Payload built:', JSON.stringify(payload, null, 2))
-
-      // Step 3: Save to database — use update (row already exists from signup trigger)
-      console.log('Step 3: Saving to database...')
       const { error: updateError } = await supabase
         .from('users')
         .update(payload as never)
         .eq('id', user.id)
 
       if (updateError) {
-        console.error('Database update error:', updateError.message, updateError.code, updateError.details, updateError.hint)
-
-        // Fallback: if update fails (e.g. row missing), try insert
-        console.log('Step 3b: Update failed, trying insert...')
         const { error: insertError } = await supabase
           .from('users')
           .insert({ id: user.id, ...payload } as never)
 
         if (insertError) {
-          console.error('Database insert error:', insertError.message, insertError.code, insertError.details, insertError.hint)
           setError(`Failed to save profile: ${insertError.message}`)
           setLoading(false)
           return
         }
       }
 
-      console.log('Step 3: Profile saved successfully!')
-
-      // Step 4: Redirect to home
-      console.log('Step 4: Redirecting to /home...')
       router.push('/home')
-
     } catch (err) {
-      console.error('Unexpected error:', err)
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setLoading(false)
     }
@@ -253,10 +161,7 @@ export default function OnboardingPage() {
                 <h2 className="text-2xl font-semibold text-stone-800 mb-2">Something went wrong</h2>
                 <p className="text-red-600 text-sm mb-4">{error}</p>
                 <button
-                  onClick={() => {
-                    setError(null)
-                    setLoading(false)
-                  }}
+                  onClick={() => { setError(null); setLoading(false) }}
                   className="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
                 >
                   Try Again
@@ -315,8 +220,8 @@ export default function OnboardingPage() {
                   onClick={() => handleGenderSelect('him')}
                   className="w-full p-8 rounded-2xl border border-stone-200 bg-white hover:border-stone-300 hover:shadow-md transition-all duration-200 text-left group"
                 >
-                  <span className="text-4xl mb-4 block">👨</span>
-                  <span className="text-2xl font-semibold text-stone-900 block mb-2 group-hover:text-amber-700 transition-colors">For Him</span>
+                  <span className="text-4xl mb-4 block">⚒️</span>
+                  <span className="text-2xl font-semibold text-stone-900 block mb-2 group-hover:text-amber-700 transition-colors">The Forge</span>
                   <span className="text-stone-500 leading-relaxed">Devotionals crafted for men navigating work, purpose, and faith</span>
                 </button>
 
@@ -324,109 +229,23 @@ export default function OnboardingPage() {
                   onClick={() => handleGenderSelect('her')}
                   className="w-full p-8 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/50 to-white hover:border-amber-300 hover:shadow-md transition-all duration-200 text-left group"
                 >
-                  <span className="text-4xl mb-4 block">👩</span>
-                  <span className="text-2xl font-semibold text-stone-900 block mb-2 group-hover:text-amber-700 transition-colors">For Her</span>
+                  <span className="text-4xl mb-4 block">🌿</span>
+                  <span className="text-2xl font-semibold text-stone-900 block mb-2 group-hover:text-amber-700 transition-colors">The Garden</span>
                   <span className="text-stone-500 leading-relaxed">Devotionals crafted for women balancing life, identity, and faith</span>
                 </button>
               </div>
 
-              {/* Privacy Notice */}
               <div className="mt-8 flex items-start gap-3 p-4 rounded-xl bg-stone-100/50">
                 <span className="text-stone-400 mt-0.5">🔒</span>
                 <p className="text-sm text-stone-500 leading-relaxed">
-                  Your responses are private and only used to personalize your experience. We never sell or share your personal information.
+                  Your responses are private and only used to personalize your experience.
                 </p>
               </div>
             </div>
           )}
 
-          {/* Step 1: Age Range */}
+          {/* Step 1: Life Stage */}
           {step === 1 && (
-            <div className="flex-1 flex flex-col animate-fade-in">
-              <div className="text-center mb-10 pt-4">
-                <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
-                  How old are you?
-                </h1>
-                <p className="text-lg text-stone-500 leading-relaxed">
-                  This helps us speak to your season of life
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {AGE_RANGES.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleOptionSelect('ageRange', option.value)}
-                    className={`p-5 rounded-2xl border-2 transition-all duration-200 text-center ${
-                      data.ageRange === option.value
-                        ? 'border-amber-500 bg-amber-50 shadow-sm'
-                        : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <span className="text-lg font-medium text-stone-800">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <NavigationButtons onBack={prevStep} showSkip onSkip={nextStep} />
-            </div>
-          )}
-
-          {/* Step 2: Faith Background */}
-          {step === 2 && (
-            <div className="flex-1 flex flex-col animate-fade-in">
-              <div className="text-center mb-10 pt-4">
-                <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
-                  Where are you in your faith journey?
-                </h1>
-                <p className="text-lg text-stone-500 leading-relaxed">
-                  We&apos;ll meet you right where you are
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {FAITH_BACKGROUNDS.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleOptionSelect('faithBackground', option.value, true)}
-                    className={`w-full p-5 rounded-2xl border-2 transition-all duration-200 text-left ${
-                      data.faithBackground === option.value
-                        ? 'border-amber-500 bg-amber-50 shadow-sm'
-                        : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <span className="text-lg font-medium text-stone-800 block">{option.label}</span>
-                    <span className="text-stone-500 text-sm">{option.description}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Other text input */}
-              {data.faithBackground === 'other' && (
-                <div className="mt-4 animate-fade-in">
-                  <textarea
-                    value={data.faithBackgroundOther}
-                    onChange={(e) => updateData('faithBackgroundOther', e.target.value)}
-                    placeholder="Tell us more about your journey..."
-                    className="w-full p-4 rounded-xl border-2 border-stone-200 focus:border-amber-500 focus:ring-0 outline-none transition-colors resize-none text-stone-800 placeholder-stone-400"
-                    rows={3}
-                  />
-                  <button
-                    onClick={nextStep}
-                    disabled={!data.faithBackgroundOther.trim()}
-                    className="mt-3 w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 disabled:text-stone-400 text-white font-semibold transition-all duration-200"
-                  >
-                    Continue
-                  </button>
-                </div>
-              )}
-
-              <NavigationButtons onBack={prevStep} showSkip onSkip={nextStep} />
-            </div>
-          )}
-
-          {/* Step 3: Life Stage */}
-          {step === 3 && (
             <div className="flex-1 flex flex-col animate-fade-in">
               <div className="text-center mb-10 pt-4">
                 <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
@@ -454,7 +273,6 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              {/* Other text input */}
               {data.lifeStage === 'other' && (
                 <div className="mt-4 animate-fade-in">
                   <textarea
@@ -478,8 +296,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 4: Current Challenge */}
-          {step === 4 && (
+          {/* Step 2: Current Challenge */}
+          {step === 2 && (
             <div className="flex-1 flex flex-col animate-fade-in">
               <div className="text-center mb-10 pt-4">
                 <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
@@ -507,7 +325,6 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              {/* Other text input */}
               {data.challenge === 'other' && (
                 <div className="mt-4 animate-fade-in">
                   <textarea
@@ -531,159 +348,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 5: Family Situation */}
-          {step === 5 && (
-            <div className="flex-1 flex flex-col animate-fade-in">
-              <div className="text-center mb-10 pt-4">
-                <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
-                  What&apos;s your family situation?
-                </h1>
-                <p className="text-lg text-stone-500 leading-relaxed">
-                  So your devotionals feel relevant to your life
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {FAMILY_SITUATIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleOptionSelect('familySituation', option.value, true)}
-                    className={`p-5 rounded-2xl border-2 transition-all duration-200 text-left ${
-                      data.familySituation === option.value
-                        ? 'border-amber-500 bg-amber-50 shadow-sm'
-                        : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <span className="text-2xl mb-2 block">{option.icon}</span>
-                    <span className="font-medium text-stone-800">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Other text input */}
-              {data.familySituation === 'other' && (
-                <div className="mt-4 animate-fade-in">
-                  <textarea
-                    value={data.familyOther}
-                    onChange={(e) => updateData('familyOther', e.target.value)}
-                    placeholder="Tell us about your situation..."
-                    className="w-full p-4 rounded-xl border-2 border-stone-200 focus:border-amber-500 focus:ring-0 outline-none transition-colors resize-none text-stone-800 placeholder-stone-400"
-                    rows={3}
-                  />
-                  <button
-                    onClick={nextStep}
-                    disabled={!data.familyOther.trim()}
-                    className="mt-3 w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 disabled:text-stone-400 text-white font-semibold transition-all duration-200"
-                  >
-                    Continue
-                  </button>
-                </div>
-              )}
-
-              <NavigationButtons onBack={prevStep} showSkip onSkip={nextStep} />
-            </div>
-          )}
-
-          {/* Step 6: Primary Goal */}
-          {step === 6 && (
-            <div className="flex-1 flex flex-col animate-fade-in">
-              <div className="text-center mb-10 pt-4">
-                <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
-                  What do you most want from this?
-                </h1>
-                <p className="text-lg text-stone-500 leading-relaxed">
-                  Your primary intention guides everything
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {PRIMARY_GOALS.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleOptionSelect('primaryGoal', option.value, true)}
-                    className={`w-full p-5 rounded-2xl border-2 transition-all duration-200 text-left ${
-                      data.primaryGoal === option.value
-                        ? 'border-amber-500 bg-amber-50 shadow-sm'
-                        : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <span className="text-lg font-medium text-stone-800 block">{option.label}</span>
-                    <span className="text-stone-500 text-sm">{option.description}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Other text input */}
-              {data.primaryGoal === 'other' && (
-                <div className="mt-4 animate-fade-in">
-                  <textarea
-                    value={data.primaryGoalOther}
-                    onChange={(e) => updateData('primaryGoalOther', e.target.value)}
-                    placeholder="What are you hoping for?"
-                    className="w-full p-4 rounded-xl border-2 border-stone-200 focus:border-amber-500 focus:ring-0 outline-none transition-colors resize-none text-stone-800 placeholder-stone-400"
-                    rows={3}
-                  />
-                  <button
-                    onClick={nextStep}
-                    disabled={!data.primaryGoalOther.trim()}
-                    className="mt-3 w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 disabled:text-stone-400 text-white font-semibold transition-all duration-200"
-                  >
-                    Continue
-                  </button>
-                </div>
-              )}
-
-              <NavigationButtons onBack={prevStep} showSkip onSkip={nextStep} />
-            </div>
-          )}
-
-          {/* Step 7: Personal Context (Free-form) */}
-          {step === 7 && (
-            <div className="flex-1 flex flex-col animate-fade-in">
-              <div className="text-center mb-8 pt-4">
-                <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
-                  Anything else we should know?
-                </h1>
-                <p className="text-lg text-stone-500 leading-relaxed">
-                  The more we know, the more personal your daily experience becomes
-                </p>
-              </div>
-
-              <div className="flex-1">
-                <textarea
-                  value={data.personalContext}
-                  onChange={(e) => updateData('personalContext', e.target.value)}
-                  placeholder="Share whatever feels important — your hopes, struggles, what you're walking through right now, what brings you joy..."
-                  className="w-full h-48 p-5 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-0 outline-none transition-colors resize-none text-stone-800 placeholder-stone-400 text-lg leading-relaxed"
-                />
-
-                <div className="mt-4 flex items-start gap-2 text-sm text-stone-400">
-                  <span>🔒</span>
-                  <p>This stays between you and God (and the AI that helps write your devotionals)</p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={nextStep}
-                  className="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-all duration-200"
-                >
-                  Continue
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="w-full py-3 text-stone-400 hover:text-stone-600 font-medium transition-colors"
-                >
-                  Skip for now
-                </button>
-              </div>
-
-              <NavigationButtons onBack={prevStep} />
-            </div>
-          )}
-
-          {/* Step 8: Preferred Charity */}
-          {step === 8 && (
+          {/* Step 3: Preferred Charity */}
+          {step === 3 && (
             <div className="flex-1 flex flex-col animate-fade-in">
               <div className="text-center mb-10 pt-4">
                 <h1 className="text-3xl font-bold text-stone-900 tracking-tight mb-3">
@@ -729,12 +395,11 @@ export default function OnboardingPage() {
   )
 }
 
-// Navigation buttons component
 function NavigationButtons({
   onBack,
   showSkip = false,
   onSkip,
-  skipLabel = "Skip for now"
+  skipLabel = 'Skip for now',
 }: {
   onBack?: () => void
   showSkip?: boolean
