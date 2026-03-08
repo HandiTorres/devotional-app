@@ -152,8 +152,10 @@ export type DevotionalContent = {
   scripture: string
   scripture_reference: string
   reflection: string
-  action_step: string
-  prayer: string
+  generated_at?: string
+  // Legacy fields (old completions may have these)
+  action_step?: string
+  prayer?: string
 }
 
 export type User = Database['public']['Tables']['users']['Row']

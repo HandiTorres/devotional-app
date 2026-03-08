@@ -105,38 +105,43 @@ function DevotionalContent() {
   }, [searchParams])
 
   const loadData = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    const { data: profileData } = await supabase
-      .from('users')
-      .select('preferred_charity, milestones_shown, gender')
-      .eq('id', user.id)
-      .single()
+      const { data: profileData } = await supabase
+        .from('users')
+        .select('preferred_charity, milestones_shown, gender')
+        .eq('id', user.id)
+        .maybeSingle()
 
-    const profile = profileData as { preferred_charity: CharityType; milestones_shown: number[] | null; gender: 'him' | 'her' | null } | null
-    if (profile?.preferred_charity) setPreferredCharity(profile.preferred_charity)
-    if (profile?.milestones_shown) setMilestonesShown(profile.milestones_shown)
-    if (profile?.gender) setGender(profile.gender)
+      const profile = profileData as { preferred_charity: CharityType; milestones_shown: number[] | null; gender: 'him' | 'her' | null } | null
+      if (profile?.preferred_charity) setPreferredCharity(profile.preferred_charity)
+      if (profile?.milestones_shown) setMilestonesShown(profile.milestones_shown)
+      if (profile?.gender) setGender(profile.gender)
 
-    const { data: rawStreakData } = await supabase
-      .from('streaks')
-      .select('current_streak, last_completed_date')
-      .eq('user_id', user.id)
-      .single()
+      const { data: rawStreakData } = await supabase
+        .from('streaks')
+        .select('current_streak, last_completed_date')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-    const streakData = rawStreakData as StreakData | null
-    if (streakData) {
-      setStreak(streakData.current_streak)
-      if (shouldShowExtensionModal(streakData)) {
-        setStreakAtRisk(streakData.current_streak)
-        setShowStreakModal(true)
-        setLoading(false)
-        return
+      const streakData = rawStreakData as StreakData | null
+      if (streakData) {
+        setStreak(streakData.current_streak)
+        if (shouldShowExtensionModal(streakData)) {
+          setStreakAtRisk(streakData.current_streak)
+          setShowStreakModal(true)
+          setLoading(false)
+          return
+        }
       }
-    }
 
-    await loadDevotional()
+      await loadDevotional()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setLoading(false)
+    }
   }
 
   const shouldShowExtensionModal = (streakData: StreakData): boolean => {
@@ -155,8 +160,17 @@ function DevotionalContent() {
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Failed to load devotional')
 
-      setDevotional(data.devotional)
-      setCompleted(data.alreadyCompleted)
+      // Guard against unexpected devotional shape
+      const dev = data.devotional
+      if (dev && typeof dev === 'object') {
+        setDevotional({
+          scripture: dev.scripture || '',
+          scripture_reference: dev.scripture_reference || '',
+          reflection: dev.reflection || '',
+          generated_at: dev.generated_at || '',
+        })
+      }
+      setCompleted(!!data.alreadyCompleted)
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -164,7 +178,7 @@ function DevotionalContent() {
           .from('streaks')
           .select('current_streak')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
         const streakResult = reloadedStreak as { current_streak: number } | null
         if (streakResult) setStreak(streakResult.current_streak)
       }
@@ -369,7 +383,7 @@ function DevotionalContent() {
                 </h2>
               </div>
               <div className="prose prose-lg max-w-none">
-                {devotional.reflection.split('\n\n').map((paragraph, index) => (
+                {(devotional.reflection || '').split('\n\n').map((paragraph, index) => (
                   <p key={index} className={`leading-relaxed text-lg mb-5 last:mb-0 ${gender === 'him' ? 'text-stone-300' : 'text-stone-700'}`}>
                     {paragraph}
                   </p>

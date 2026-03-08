@@ -93,18 +93,18 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 pb-28">
+    <main className="min-h-screen bg-gradient-to-b from-stone-50 via-amber-50/30 to-stone-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 pb-28">
       {/* Header */}
       <header className="px-8 pt-12 pb-6">
         <p className="text-stone-400 text-sm tracking-wide uppercase">{formatDate()}</p>
-        <h1 className="text-4xl font-bold text-stone-900 tracking-tight mt-1">
+        <h1 className="text-4xl font-bold text-stone-900 dark:text-white tracking-tight mt-1">
           {getGreeting()}{userName ? `, ${userName}` : ''}
         </h1>
       </header>
@@ -154,43 +154,43 @@ export default function HomePage() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 gap-4">
           {/* Current Streak */}
-          <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+          <div className="bg-white dark:bg-stone-800 rounded-2xl p-6 border border-stone-200 dark:border-stone-700 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-3xl">🔥</span>
               <Link href="/impact" className="text-amber-600 text-sm font-medium hover:text-amber-700">
                 Details
               </Link>
             </div>
-            <p className="text-4xl font-bold text-stone-900 tracking-tight">{data?.currentStreak || 0}</p>
-            <p className="text-stone-500 text-sm mt-1">day streak</p>
+            <p className="text-4xl font-bold text-stone-900 dark:text-white tracking-tight">{data?.currentStreak || 0}</p>
+            <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">day streak</p>
           </div>
 
           {/* Personal Best */}
-          <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+          <div className="bg-white dark:bg-stone-800 rounded-2xl p-6 border border-stone-200 dark:border-stone-700 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-3xl">🏆</span>
             </div>
-            <p className="text-4xl font-bold text-stone-900 tracking-tight">{data?.longestStreak || 0}</p>
-            <p className="text-stone-500 text-sm mt-1">personal best</p>
+            <p className="text-4xl font-bold text-stone-900 dark:text-white tracking-tight">{data?.longestStreak || 0}</p>
+            <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">personal best</p>
           </div>
         </div>
 
         {/* Impact Card */}
-        <section className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+        <section className="bg-white dark:bg-stone-800 rounded-2xl p-6 border border-stone-200 dark:border-stone-700 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-emerald-900/30 dark:to-green-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
               <span className="text-2xl">🍽️</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-stone-900 mb-1">Your Impact</h3>
+              <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-1">Your Impact</h3>
               {mealsProvided > 0 ? (
-                <p className="text-stone-600 leading-relaxed">
+                <p className="text-stone-600 dark:text-stone-300 leading-relaxed">
                   Your consistency has provided{' '}
                   <span className="font-semibold text-emerald-600">{mealsProvided} meals</span>{' '}
                   to families in need
                 </p>
               ) : (
-                <p className="text-stone-500 leading-relaxed">
+                <p className="text-stone-500 dark:text-stone-400 leading-relaxed">
                   Keep your streak going. When you extend, 100% feeds families in need.
                 </p>
               )}
@@ -198,51 +198,69 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Ask Pastor Preview */}
-        <section className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl p-6 text-white">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🎙️</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-semibold">Ask Pastor Landon</h3>
-                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs font-medium rounded-full">
-                  Coming Soon
-                </span>
+        {/* Forge / Garden Card */}
+        {gender === 'him' ? (
+          <section className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl p-6 text-white">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">⚒️</span>
               </div>
-              <p className="text-stone-400 text-sm leading-relaxed mb-4">
-                Get biblical wisdom from thousands of sermons and Bible studies
-              </p>
-              <Link
-                href="/ask"
-                className="inline-flex items-center gap-2 text-amber-400 font-medium text-sm hover:text-amber-300 transition-colors"
-              >
-                Learn More
-                <span>→</span>
-              </Link>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold">The Forge</h3>
+                <p className="text-stone-400 text-sm leading-relaxed mb-4">
+                  Daily challenges to sharpen your character. Iron sharpens iron.
+                </p>
+                <Link
+                  href="/forge"
+                  className="inline-flex items-center gap-2 text-amber-400 font-medium text-sm hover:text-amber-300 transition-colors"
+                >
+                  Enter The Forge
+                  <span>→</span>
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <section className="bg-gradient-to-br from-rose-50 to-amber-50 dark:from-stone-800 dark:to-stone-800 rounded-2xl p-6 border border-rose-100 dark:border-stone-700">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl">🌿</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-stone-900 dark:text-white">The Garden</h3>
+                <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed mb-4">
+                  Daily reflections to nurture your soul. Rooted in grace.
+                </p>
+                <Link
+                  href="/garden"
+                  className="inline-flex items-center gap-2 text-rose-600 dark:text-rose-400 font-medium text-sm hover:text-rose-700 transition-colors"
+                >
+                  Visit The Garden
+                  <span>→</span>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Quick Links */}
         <div className="grid grid-cols-2 gap-4">
           <Link
             href="/impact"
-            className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm hover:shadow-md hover:border-stone-300 transition-all duration-200 group"
+            className="bg-white dark:bg-stone-800 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 shadow-sm hover:shadow-md hover:border-stone-300 transition-all duration-200 group"
           >
             <span className="text-2xl block mb-2">📊</span>
-            <p className="font-medium text-stone-900 group-hover:text-amber-700 transition-colors">View Impact</p>
-            <p className="text-stone-500 text-sm">See your giving</p>
+            <p className="font-medium text-stone-900 dark:text-white group-hover:text-amber-700 transition-colors">View Impact</p>
+            <p className="text-stone-500 dark:text-stone-400 text-sm">See your giving</p>
           </Link>
 
           <Link
             href="/profile"
-            className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm hover:shadow-md hover:border-stone-300 transition-all duration-200 group"
+            className="bg-white dark:bg-stone-800 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 shadow-sm hover:shadow-md hover:border-stone-300 transition-all duration-200 group"
           >
             <span className="text-2xl block mb-2">⚙️</span>
-            <p className="font-medium text-stone-900 group-hover:text-amber-700 transition-colors">Settings</p>
-            <p className="text-stone-500 text-sm">Manage profile</p>
+            <p className="font-medium text-stone-900 dark:text-white group-hover:text-amber-700 transition-colors">Settings</p>
+            <p className="text-stone-500 dark:text-stone-400 text-sm">Manage profile</p>
           </Link>
         </div>
       </div>
